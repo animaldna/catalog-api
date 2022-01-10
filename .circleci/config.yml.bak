@@ -1,26 +1,4 @@
-# New variables to supply:
-# $DOCKERHUB_USER
-# $TESTING_IMG -- todo
-# $BUILD_IMG -- todo
-# $TARGET_REPO
-# $ resource class for deploy runner -- todo
-# $ aws region -- todo
-
 version: 2.1
-commands:
-  chown_cache_dirs:
-    steps:
-      - run:
-          command: |
-            sudo chown -R circleci:circleci /usr/local/bin
-            sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
-            sudo chown -R circleci:circleci /home/circleci/.local/share/
-  run_tests:
-      steps:
-        - run:
-          command: |
-            mkdir test-results
-            pipenv run pytest -v --junitxml=test-results/junit.xml
 workflows:
   test_build_push:
     jobs:
@@ -34,7 +12,7 @@ jobs:
     docker:
       - image: cimg/python:3.9
         auth:
-          username: $DOCKERHUB_USER
+          username: animaldna
           password: $DOCKERHUB_PASSWORD
         environment:
           AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
@@ -45,7 +23,9 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - chown_cache_dirs
+      - run: sudo chown -R circleci:circleci /usr/local/bin
+      - run: sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
+      - run: sudo chown -R circleci:circleci /home/circleci/.local/share/
       - restore_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
@@ -84,6 +64,6 @@ jobs:
           command: aws ecr get-login-password | docker login -u ${AWS_ACCESS_KEY} AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - run:
           command: |
-            docker build -t ${TARGET_REPO}:${CIRCLE_SHA1} .
-            docker tag ${TARGET_REPO}:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${TARGET_REPO}:${CIRCLE_SHA1}
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${TARGET_REPO}:${CIRCLE_SHA1} 
+            docker build -t demo-catalog_api:${CIRCLE_SHA1} .
+            docker tag demo-catalog_api:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/demo-catalog_api:${CIRCLE_SHA1}
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/demo-catalog_api:${CIRCLE_SHA1} 

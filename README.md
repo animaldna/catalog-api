@@ -3,7 +3,7 @@ This project is a "clone" of the public [Discogs API](https://api.discogs.com/) 
 
 The API itself was actually a secondary focus; my main goals were to: 
 1. Get hands-on experience with DynamoDB, specifically optimized table design
-2. Have a "real world" project I could use to work with CircleCI, Terraform, and ECS. 
+2. Have a "real world" project I could use to work with CircleCI, Terraform, and ECS. [The Terraform project can be found here.]()
    
 There's a very limited set of data. Data was generated with ______.
 

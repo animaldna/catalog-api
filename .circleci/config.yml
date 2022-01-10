@@ -1,31 +1,82 @@
+# New variables to supply:
+# $DOCKERHUB_USER
+# $UNIT_TEST_IMG -- todo
+# $BUILD_IMG -- todo
+# $TARGET_REPO
+# $ resource class for deploy runner -- todo
+# $ aws region -- todo
+
+# jobs:
+#   deploy_stage:
+#     machine: true
+#     resource_class: $RESOURCE_CLASS
+#     steps:
+#       - checkout
+#       - # need to call deploy.py with the following variables:
+#       - # TASK_TEMPLATE ($repo_name-template)
+#       - # NEW_IMAGE_TAG (CIRCLE_SHA1)
+#       - # SERVICE ($repo_name-service)
+#       - # CLUSTER ($repo_name-cluster)
+
+# WHAT IS IT? need something like this https://support.circleci.com/hc/en-us/articles/360043638052-Conditional-steps-in-jobs-and-conditional-workflows
+
 version: 2.1
-workflows:
-  test_build_push:
-    jobs:
-      - test:
-          context: personal_testing
-      - build_and_push:
-          context: personal_testing
+production_only: &prod_only
+  filters:
+    branch:
+      only: master
+dev_only: &dev_only
+  filters:
+    branch:
+      only: dev
+commands:
+  chown_cache_dirs:
+    steps:
+      - run:
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
+            sudo chown -R circleci:circleci /home/circleci/.local/share/
+  run_unit_tests:
+      steps:
+        - run:
+            command: |
+              mkdir test-results
+              pipenv run pytest -v --junitxml=test-results/junit.xml
+  deploy_to_ecs:
+    parameters:
+    
+    steps:
+      - run:
+          command: |
+            python deploy.py --project_name ${CIRCLE_PROJECT_REPONAME}
+
+
+  
+
 jobs:
-  test:
+  unit_tests:
+    parameters:
+      unit_test_img:
+        description: Docker image for running unit tests
+        type: string
+        default: cimg/python:3.9
     working_directory: ~/app
     docker:
-      - image: cimg/python:3.9
+      - image: << parameters.unit_test_img >>
         auth:
-          username: animaldna
+          username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         environment:
           AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
           AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-          AWS_DEFAULT_REGION: us-east-2
+          AWS_DEFAULT_REGION: $AWS_REGION
     resource_class: small
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
-      - run: sudo chown -R circleci:circleci /home/circleci/.local/share/
+      - chown_cache_dirs
       - restore_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
@@ -37,33 +88,94 @@ jobs:
             - "/usr/local/bin"
             - "/home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages"
             - "/home/circleci/.local/share/virtualenvs/"
-      - run:
-          command: |
-            mkdir test-results
-            pipenv run pytest -v --junitxml=test-results/junit.xml
+      - run_unit_tests
       - store_test_results:
           path: test-results
   build_and_push:
+    parameters:
+      build_img:
+        description: Docker image for building + pushing to ECR
+        type: string
+        default: animaldna/cimg-py-aws:latest
+      target_repo:
+        description: The repo to push the new image to.
+        type: string
     working_directory: ~/app
     docker:
-      - image: animaldna/cimg-py-aws:latest
+      - image: << parameters.build_img >>
         auth:
-          username: animaldna
+          username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
     resource_class: small
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: 
-          command: |
-            sudo chown -R circleci:circleci /usr/local/bin
-            sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
-            sudo chown -R circleci:circleci /home/circleci/.local/share/
+      - chown_cache_dirs
       - run: 
           command: aws ecr get-login-password | docker login -u ${AWS_ACCESS_KEY} AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - run:
           command: |
-            docker build -t demo-catalog_api:${CIRCLE_SHA1} .
-            docker tag demo-catalog_api:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/demo-catalog_api:${CIRCLE_SHA1}
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/demo-catalog_api:${CIRCLE_SHA1} 
+            docker build -t << parameters.target_repo >>:${CIRCLE_SHA1} .
+            docker tag << parameters.target_repo >>:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1} 
+  deploy:
+    parameters:
+      resource_class:
+        description: The resource class of the EC2 runner for deploy scripts
+        type: string
+      service:
+        description: Name of the ECS service being deployed
+        type: string
+        default: ${CIRCLE_PROJECT_REPONAME}
+      env:
+        description: The environment to deploy to. Must be one of "dev", "stage", "prod".
+        type: string
+        default: dev
+    machine: true
+    resource_class: << parameters.resource_class >>
+    steps: 
+
+
+
+
+workflows:
+  default:
+    jobs:
+      - run_unit_tests:
+          parameters:
+            unit_test_img: cimg/python:3.9
+      - build_and_push:
+          parameters:
+            build_img: animaldna/cimg-py-aws:latest
+            target_repo: 
+      # - deploy:
+      #     <<: *dev_only
+      #     name: deploy_dev
+      #     context: catalog_api_dev
+      #     parameters:
+      #       resource_class: animaldna/main-rsrc-class
+      #     requires:
+      #       - build_push
+      - deploy:
+          <<: *prod_only
+          name: deploy_stage
+          # do i need a stage specific context?
+          context: catalog_api_dev
+          parameters:
+            resource_class: animaldna/main-rsrc-class
+          requires:
+            - build_push
+      - stage_hold:
+          <<: *prod_only
+          type: approval
+          requires: 
+            - deploy_stage
+      - deploy:
+          <<: *prod_only
+          name: deploy_prod
+          context: catalog_api_prod
+          parameters:
+            resource_class: animaldna/main-rsrc-class
+          requires:
+            - stage_hold
