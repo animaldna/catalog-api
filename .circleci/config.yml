@@ -103,21 +103,21 @@ jobs:
       #       docker build -t << parameters.target_repo >>:${CIRCLE_SHA1} .
       #       docker tag << parameters.target_repo >>:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}
       #       docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1} 
-get_task_def_template:
-  exectuor: aws-cli/default
-  <<: *test_only
-  context: catalog_api_dev
-  working_directory: *work_dir
-  steps:
-    - aws-cli/setup
-    - run:
-        name: Pull latest task definition template
-        command: |
-          set -x
-          aws ecs describe-task-definition \
-          --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
-          >> task_template.json
-          cat task_template.json
+  get_task_def_template:
+    exectuor: aws-cli/default
+    <<: *test_only
+    context: catalog_api_dev
+    working_directory: *work_dir
+    steps:
+      - aws-cli/setup
+      - run:
+          name: Pull latest task definition template
+          command: |
+            set -x
+            aws ecs describe-task-definition \
+            --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
+            >> task_template.json
+            cat task_template.json
 
 
 workflows:
