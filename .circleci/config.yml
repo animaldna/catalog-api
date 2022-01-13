@@ -121,9 +121,9 @@ workflows:
           repo: catalog-api
           tag: $CIRCLE_SHA1-test
       - aws-ecs/deploy-service-update:
-          cluster-name: 'dev-${CIRCLE_PROJECT_REPO}-cluster'
-          container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPO}-service,tag=${CIRCLE_SHA1}-test'
-          family: 'dev-${CIRCLE_PROJECT_REPO}-service'
+          cluster-name: 'dev-${CIRCLE_PROJECT_REPONAME}-cluster'
+          container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}-test'
+          family: 'dev-${CIRCLE_PROJECT_REPONAME}-service'
           requires:
             - aws-ecr/build-and-push-image
 
