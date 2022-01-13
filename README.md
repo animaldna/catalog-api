@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/animaldna/catalog-api/tree/master.svg?style=shield&circle-token=35fcd313fe9c103fdd9fda6e0506da556da97043)](https://circleci.com/gh/animaldna/catalog-api/tree/master) [![Github](https://img.shields.io/github/last-commit/animaldna/catalog-api?style=shield)](https://github.com/animaldna/catalog-api/commits/master)
+
 # Cronenberg's Discogs API
 This project is a "clone" of the public [Discogs API](https://api.discogs.com/) built using [FastAPI.](https://github.com/tiangolo/fastapi) Data is stored in [DynamoDB](https://aws.amazon.com/dynamodb/) using a single-table design. (Shout out to Alex DeBrie for putting together an excellent resource explaining [this tricky concept.](https://www.alexdebrie.com/posts/dynamodb-single-table/)) It's using a very limited dataset pulled from Discogs.
 
