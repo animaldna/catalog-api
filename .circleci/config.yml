@@ -63,10 +63,14 @@ jobs:
       - run: 
           command: aws ecr get-login-password | docker login -u ${AWS_ACCESS_KEY} AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - run:
+          # command: |
+          #   docker build -t catalog-api:${CIRCLE_SHA1}-stable .
+          #   docker tag catalog-api:${CIRCLE_SHA1}-stable ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable
+          #   docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable 
           command: |
-            docker build -t catalog-api:${CIRCLE_SHA1}-stable .
-            docker tag catalog-api:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable
+            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable  .
             docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable 
+          
 
 
 # New variables to supply:

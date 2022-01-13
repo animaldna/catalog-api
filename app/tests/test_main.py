@@ -9,7 +9,7 @@ def test_root_route():
     assert response.json() == {
         "hello": "Welcome to the Conehead Records API",
         "api_version": "v1",
-        "documentation_url": "https://catalog-api.chloeboylan.work"
+        "documentation_url": "https://catalog-api.chloeboylan.work/redoc"
     }
 
 def test_get_single_artist_success(sample_artist):
