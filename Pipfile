@@ -11,6 +11,7 @@ uvicorn = {extras = ["standard"], version = "*"}
 boto3 = "*"
 requests = "*"
 halo = "*"
+slowapi = "*"
 
 [dev-packages]
 
