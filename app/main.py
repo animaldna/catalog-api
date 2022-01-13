@@ -24,7 +24,7 @@ app.include_router(genres.router)
 def root():
     return {
         "hello": "Welcome to the Conehead Records API",
-        "api_version": "v1",
+        "api_version": "scoot",
         "documentation_url": "https://catalog-api.chloeboylan.work/redoc"
     }
     
