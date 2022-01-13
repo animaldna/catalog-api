@@ -123,7 +123,6 @@ workflows:
       - aws-ecs/update-task-definition:
           <<: *test_only
           aws-region: AWS_REGION
-          cluster-name: 'dev-${CIRCLE_PROJECT_REPONAME}-cluster'
           container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}-test'
           family: 'dev-${CIRCLE_PROJECT_REPONAME}-service'
           requires:
@@ -134,7 +133,7 @@ workflows:
           # container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}-test'
           family: 'dev-${CIRCLE_PROJECT_REPONAME}-service'
           requires:
-            - aws-ecr/update-task-definition
+            - aws-ecs/update-task-definition
 
 
       # CCI_ORB_AWS_ECS_REGISTERED_TASK_DFN
