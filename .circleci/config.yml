@@ -124,7 +124,7 @@ workflows:
           <<: *test_only
           aws-region: AWS_REGION
           container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}-test'
-          family: 'dev-${CIRCLE_PROJECT_REPONAME}-service'
+          family: 'dev-${CIRCLE_PROJECT_REPONAME}-task'
           requires:
             - aws-ecr/build-and-push-image
       - aws-ecs/deploy-service-update:
