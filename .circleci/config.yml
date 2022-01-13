@@ -1,9 +1,11 @@
 version: 2.1
 orbs:
+  aws-cli: circleci/aws-cli@2.0.6
   aws-ecs: circleci/aws-ecs@2.2.1
   aws-ecr: circleci/aws-ecr@7.3.0
 
-## ALIASES ##    
+## ALIASES ##
+global_work_dir: &work_dir "/tmp/cci-work-dir"
 production_only: &prod_only
   filters:
     branches:
@@ -114,26 +116,31 @@ workflows:
       #     parameters:
       #       build_img: animaldna/cimg-py-aws:latest
       #       target_repo: 666431669894.dkr.ecr.us-east-2.amazonaws.com/cbergs-discogs
-      - aws-ecr/build-and-push-image:
+      # - aws-ecr/build-and-push-image:
+      #     executor: aws-cli/default
+      #     <<: *test_only
+      #     context: catalog_api_dev 
+      #     setup-remote-docker: true
+      #     remote-docker-layer-caching: true
+      #     repo: catalog-api
+      #     tag: $CIRCLE_SHA1-test
+      - get_task_def_template:
+          exectuor: aws-cli/default
           <<: *test_only
-          context: catalog_api_dev 
-          remote-docker-layer-caching: true
-          repo: catalog-api
-          tag: $CIRCLE_SHA1-test
-      - aws-ecs/update-task-definition:
-          <<: *test_only
-          aws-region: AWS_REGION
-          container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}-test'
-          family: 'dev-${CIRCLE_PROJECT_REPONAME}-task'
-          requires:
-            - aws-ecr/build-and-push-image
-      - aws-ecs/deploy-service-update:
-          <<: *test_only
-          cluster-name: 'dev-${CIRCLE_PROJECT_REPONAME}-cluster'
-          # container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPONAME}-service,tag=${CIRCLE_SHA1}-test'
-          family: 'dev-${CIRCLE_PROJECT_REPONAME}-service'
-          requires:
-            - aws-ecs/update-task-definition
+          context: catalog_api_dev
+          working_directory: *work_dir
+          steps:
+            - aws-cli/setup
+            - run:
+                name: Pull latest task definition template
+                command: |
+                  set -x
+                  aws ecs describe-task-definition \
+                  --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
+                  >> task_template.json
+                  cat task_template.json
+          
+
 
 
       # CCI_ORB_AWS_ECS_REGISTERED_TASK_DFN
