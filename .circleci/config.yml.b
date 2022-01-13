@@ -64,29 +64,6 @@ jobs:
           command: aws ecr get-login-password | docker login -u ${AWS_ACCESS_KEY} AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - run:
           command: |
-            docker build -t catalog-api:${CIRCLE_SHA1}-stable .
-            docker tag catalog-api:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable 
-
-
-# New variables to supply:
-# $DOCKERHUB_USER
-# $UNIT_TEST_IMG -- todo
-# $BUILD_IMG -- todo
-# $TARGET_REPO
-# $ resource class for deploy runner -- todo
-# $ aws region -- todo
-
-# jobs:
-#   deploy_stage:
-#     machine: true
-#     resource_class: $RESOURCE_CLASS
-#     steps:
-#       - checkout
-#       - # need to call deploy.py with the following variables:
-#       - # TASK_TEMPLATE ($repo_name-template)
-#       - # NEW_IMAGE_TAG (CIRCLE_SHA1)
-#       - # SERVICE ($repo_name-service)
-#       - # CLUSTER ($repo_name-cluster)
-
-# WHAT IS IT? need something like this https://support.circleci.com/hc/en-us/articles/360043638052-Conditional-steps-in-jobs-and-conditional-workflows
+            docker build -t demo-catalog_api:${CIRCLE_SHA1} .
+            docker tag demo-catalog_api:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/demo-catalog_api:${CIRCLE_SHA1}
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/demo-catalog_api:${CIRCLE_SHA1} 

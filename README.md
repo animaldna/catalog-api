@@ -1,11 +1,9 @@
 # Cronenberg's Discogs API
-This project is a "clone" of the public [Discogs API](https://api.discogs.com/) built using [FastAPI.](https://github.com/tiangolo/fastapi) Data is stored in [DynamoDB](https://aws.amazon.com/dynamodb/) using a single-table design. (Shout out to Alex DeBrie for putting together an excellent resource explaining [this tricky concept.](https://www.alexdebrie.com/posts/dynamodb-single-table/))
+This project is a "clone" of the public [Discogs API](https://api.discogs.com/) built using [FastAPI.](https://github.com/tiangolo/fastapi) Data is stored in [DynamoDB](https://aws.amazon.com/dynamodb/) using a single-table design. (Shout out to Alex DeBrie for putting together an excellent resource explaining [this tricky concept.](https://www.alexdebrie.com/posts/dynamodb-single-table/)) It's using a very limited dataset pulled from Discogs.
 
 The API itself was actually a secondary focus; my main goals were to: 
 1. Get hands-on experience with DynamoDB, specifically optimized table design
-2. Have a "real world" project I could use to work with CircleCI, Terraform, and ECS. [The Terraform project can be found here.]()
-   
-There's a very limited set of data. Data was generated with ______.
+2. Have a "real world" project I could use to work with CircleCI, Terraform, and ECS. [The main Terraform project can be found here.](https://github.com/animaldna/aws-ecs-tf-public)
 
 ## Technologies
 - Python 3.9
@@ -14,17 +12,23 @@ There's a very limited set of data. Data was generated with ______.
 - Uvicorn 0.16.0
 - boto3 1.20.23
 - DynamoDB
+- CircleCI
 
 ## Usage
-As of this writing (Dec 2021), whatever version of this API that's working is hosted at [https://catalog-api.chloeboylan.work](https://catalog-api.chloeboylan.work). There are two sets of docs available at [/docs]() and [/redoc.]() I don't want to wake up to an absurd AWS bill, so it's rate-limited to _____ in case someone tries to blast it for whatever reason.
+A working version is hosted at [https://catalog-api.chloeboylan.work](https://catalog-api.chloeboylan.work). There are two sets of docs available at [/docs](https://catalog-api.chloeboylan.work/docs) and [/redoc.](https://catalog-api.chloeboylan.work/redoc) I don't want to wake up to an absurd AWS bill, so it's rate-limited to 5 requests/minute in case someone tries to blast it for whatever reason. :)
 
-## TODOs
-Right now I'm focused on building out a more production-ready CI/CD pipeline, so the TODOs below are back-burner. You can see what I'm working on in the [infrastructure repo]() for this project.
+## CI/CD Pipeline
 
-#### CircleCI
-- [ ] Switch dev branch to EC2 runner
-- [ ] Add Terraform job for dev env
-- [ ] Add ecs-deploy for master branch
+### CircleCI TODOs
+- [ ] Slack notifications
+- [ ] Version with deployment via runner
+- [ ] Version with deployment via Lambda
+- [ ] Version with CodePipeline blue/green deployment
+- [ ] Slack approvals
+
+## API TODOs
+Right now I'm focused on the CI/CD pipeline and project infrastructure, so the API TODOs are back-burner.
+
 #### Routes
 - [ ] /albums?genre="foo"&style="bar"
 - [ ] /albums/latest
@@ -37,7 +41,7 @@ Right now I'm focused on building out a more production-ready CI/CD pipeline, so
 - [ ] Pagination
 
 ## Feedback
-This is a personal project and a work in progress, but I'm always open to receiving any and all feedback about anything I'm working on. Feel free to email me or you can just open an issue and drop your thoughts.
+This is a personal project and a work in progress, but I'm always open to receiving any and all feedback about anything I'm working on. Feel free to open an issue and drop your thoughts.
 
 ## Author
 Chloe Boylan
