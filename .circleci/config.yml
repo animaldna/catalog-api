@@ -120,7 +120,7 @@ workflows:
           remote-docker-layer-caching: true
           repo: catalog-api
           tag: $CIRCLE_SHA1-test
-     - aws-ecs/deploy-service-update:
+      - aws-ecs/deploy-service-update:
           cluster-name: 'dev-${CIRCLE_PROJECT_REPO}-cluster'
           container-image-name-updates: 'container=dev-${CIRCLE_PROJECT_REPO}-service,tag=${CIRCLE_SHA1}-test'
           family: 'dev-${CIRCLE_PROJECT_REPO}-service'
