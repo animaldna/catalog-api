@@ -6,15 +6,15 @@ orbs:
 ## ALIASES ##    
 production_only: &prod_only
   filters:
-    branch:
+    branches:
       only: master
 dev_only: &dev_only
   filters:
-    branch:
+    branches:
       only: dev
 test_only: &test_only
   filters:
-    branch:
+    branches:
       only: ecs-orb-test
 ## COMMANDS ##
 commands:
@@ -116,11 +116,10 @@ workflows:
       #       target_repo: 666431669894.dkr.ecr.us-east-2.amazonaws.com/cbergs-discogs
       - aws-ecr/build-and-push-image:
           <<: *test_only
-          account-url: 666431669894.dkr.ecr.us-east-2.amazonaws.com
           context: catalog_api_dev 
           remote-docker-layer-caching: true
           repo: catalog-api
-          tag: ${CIRCLE_SHA1}-test
+          tag: $CIRCLE_SHA1-test
       # - aws-ecs/deploy-service-update:
       #     cluster-name: "${}-cluster"
       #     container-image-name-updates: "container=${}-service,tag=${CIRCLE_SHA1}-stable""
