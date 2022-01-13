@@ -1,31 +1,60 @@
 version: 2.1
-workflows:
-  test_build_push:
-    jobs:
-      - test:
-          context: personal_testing
-      - build_and_push:
-          context: personal_testing
+orbs:
+  aws-ecs: circleci/aws-ecs@2.2.1
+  aws-ecr: circleci/aws-ecr@7.3.0
+
+## ALIASES ##    
+production_only: &prod_only
+  filters:
+    branch:
+      only: master
+dev_only: &dev_only
+  filters:
+    branch:
+      only: dev
+test_only: &test_only
+  filters:
+    branch:
+      only: ecs-orb-test
+## COMMANDS ##
+commands:
+  chown_cache_dirs:
+    steps:
+      - run:
+          command: |
+            sudo chown -R circleci:circleci /usr/local/bin
+            sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
+            sudo chown -R circleci:circleci /home/circleci/.local/share/
+  run_unit_tests:
+      steps:
+        - run:
+            command: |
+              mkdir test-results
+              pipenv run pytest -v --junitxml=test-results/junit.xml
+
 jobs:
-  test:
+  unit_tests:
+    parameters:
+      unit_test_img:
+        description: Docker image for running unit tests
+        type: string
+        default: cimg/python:3.9
     working_directory: ~/app
     docker:
-      - image: cimg/python:3.9
+      - image: << parameters.unit_test_img >>
         auth:
-          username: animaldna
+          username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         environment:
           AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
           AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-          AWS_DEFAULT_REGION: us-east-2
+          AWS_DEFAULT_REGION: $AWS_REGION
     resource_class: small
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: sudo chown -R circleci:circleci /usr/local/bin
-      - run: sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
-      - run: sudo chown -R circleci:circleci /home/circleci/.local/share/
+      - chown_cache_dirs
       - restore_cache:
           key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
@@ -37,60 +66,69 @@ jobs:
             - "/usr/local/bin"
             - "/home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages"
             - "/home/circleci/.local/share/virtualenvs/"
-      - run:
-          command: |
-            mkdir test-results
-            pipenv run pytest -v --junitxml=test-results/junit.xml
-      - store_test_results:
-          path: test-results
+      # - run_unit_tests
+      # - store_test_results:
+      #     path: test-results
   build_and_push:
+    parameters:
+      build_img:
+        description: Docker image for building + pushing to ECR
+        type: string
+        default: animaldna/cimg-py-aws:latest
+      target_repo:
+        description: The repo to push the new image to.
+        type: string
     working_directory: ~/app
     docker:
-      - image: animaldna/cimg-py-aws:latest
+      - image: << parameters.build_img >>
         auth:
-          username: animaldna
+          username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
     resource_class: small
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run: 
-          command: |
-            sudo chown -R circleci:circleci /usr/local/bin
-            sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
-            sudo chown -R circleci:circleci /home/circleci/.local/share/
+      - chown_cache_dirs
       - run: 
           command: aws ecr get-login-password | docker login -u ${AWS_ACCESS_KEY} AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - run:
-          # command: |
-          #   docker build -t catalog-api:${CIRCLE_SHA1}-stable .
-          #   docker tag catalog-api:${CIRCLE_SHA1}-stable ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable
-          #   docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable 
           command: |
-            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable  .
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/catalog-api:${CIRCLE_SHA1}-stable 
-          
+            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-stable .
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-stable 
+      #  - run:
+      #     command: |
+      #       docker build -t << parameters.target_repo >>:${CIRCLE_SHA1} .
+      #       docker tag << parameters.target_repo >>:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}
+      #       docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1} 
 
 
-# New variables to supply:
-# $DOCKERHUB_USER
-# $UNIT_TEST_IMG -- todo
-# $BUILD_IMG -- todo
-# $TARGET_REPO
-# $ resource class for deploy runner -- todo
-# $ aws region -- todo
 
-# jobs:
-#   deploy_stage:
-#     machine: true
-#     resource_class: $RESOURCE_CLASS
-#     steps:
-#       - checkout
-#       - # need to call deploy.py with the following variables:
-#       - # TASK_TEMPLATE ($repo_name-template)
-#       - # NEW_IMAGE_TAG (CIRCLE_SHA1)
-#       - # SERVICE ($repo_name-service)
-#       - # CLUSTER ($repo_name-cluster)
-
-# WHAT IS IT? need something like this https://support.circleci.com/hc/en-us/articles/360043638052-Conditional-steps-in-jobs-and-conditional-workflows
+workflows:
+  default:
+    jobs:
+      # - run_unit_tests:
+      #     parameters:
+      #       unit_test_img: cimg/python:3.9
+      # - build_and_push:
+      #     parameters:
+      #       build_img: animaldna/cimg-py-aws:latest
+      #       target_repo: 666431669894.dkr.ecr.us-east-2.amazonaws.com/cbergs-discogs
+      - aws-ecr/build-and-push-image:
+          <<: *test_only
+          account-url: 666431669894.dkr.ecr.us-east-2.amazonaws.com
+          context: catalog_api_dev 
+          remote-docker-layer-caching: true
+          repo: catalog-api
+          tag: ${CIRCLE_SHA1}-test
+      # - aws-ecs/deploy-service-update:
+      #     cluster-name: "${}-cluster"
+      #     container-image-name-updates: "container=${}-service,tag=${CIRCLE_SHA1}-stable""
+      #     family:
+      #     requires:
+      #       - aws-ecs/update-task-definition
+      # - aws-ecs/verify-revision-is-deployed:
+      #     cluster-name:
+      #     family:
+      #     task-definition
+      
