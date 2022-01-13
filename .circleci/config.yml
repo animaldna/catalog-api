@@ -104,9 +104,7 @@ jobs:
       #       docker tag << parameters.target_repo >>:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}
       #       docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1} 
   get_task_def_template:
-    exectuor: aws-cli/default
-    <<: *test_only
-    context: catalog_api_dev
+    executor: aws-cli/default
     working_directory: *work_dir
     steps:
       - aws-cli/setup
@@ -138,7 +136,9 @@ workflows:
       #     remote-docker-layer-caching: true
       #     repo: catalog-api
       #     tag: $CIRCLE_SHA1-test
-      - get_task_def_template
+      - get_task_def_template:
+          <<: *test_only
+          context: catalog_api_dev
           
 
 
