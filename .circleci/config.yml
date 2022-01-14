@@ -68,12 +68,12 @@ commands:
       - run:
           command: |
             cat new_task_definition.json
-    register_new_task:
-      steps:
-        - run:
-            command: |
-              set -x
-              aws ecs register-task-definition --cli-input-json file://tmp/cci-work-dir/new_task_definition.json
+  register:
+    steps:
+      - run:
+          command: |
+            set -x
+            aws ecs register-task-definition --cli-input-json file://tmp/cci-work-dir/new_task_definition.json
 
 jobs:
   unit_tests:
@@ -151,7 +151,7 @@ jobs:
       # - aws-cli/setup
       - pull_task_template
       - setup_new_task_def
-      - register_new_task_def
+      - register
 
 
 
