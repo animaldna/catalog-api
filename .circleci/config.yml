@@ -219,7 +219,7 @@ workflows:
           <<: *test_only
           context: catalog_api_dev
           requires:
-            - aws-ecr/build-and-push-image
+            - build_and_push
       - update_service:
           <<: *test_only
           context: catalog_api_dev
