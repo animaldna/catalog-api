@@ -2,7 +2,6 @@ version: 2.1
 orbs:
   aws-cli: circleci/aws-cli@2.0.6
   aws-ecs: circleci/aws-ecs@2.2.1
-  aws-ecr: circleci/aws-ecr@7.3.0
 
 ## ALIASES ##
 global_work_dir: &work_dir "/tmp/cci-work-dir"

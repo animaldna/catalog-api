@@ -20,6 +20,9 @@ The API itself was actually a secondary focus; my main goals were to:
 A working version is hosted at [https://catalog-api.chloeboylan.work](https://catalog-api.chloeboylan.work). There are two sets of docs available at [/docs](https://catalog-api.chloeboylan.work/docs) and [/redoc.](https://catalog-api.chloeboylan.work/redoc) I don't want to wake up to an absurd AWS bill, so it's rate-limited to 5 requests/minute in case someone tries to blast it for whatever reason. :)
 
 ## CI/CD Pipeline
+The default pipeline pulls the task template from ECS, updates it with jq, registers the new task definition, and updates the service. Everything but the build step runs on a custom image based on python:3.9-buster-slim. 
+
+![Default CI/CD Pipeline](./assets/cci_default.jpg)
 
 ### CircleCI TODOs
 - [ ] Slack notifications
