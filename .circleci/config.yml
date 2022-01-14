@@ -49,11 +49,11 @@ commands:
             --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
             >> task_template.json
             cat task_template.json
-  install_sponge:
+  install_deps:
     steps:
       - run:
           command: |
-            apt-get install moreutils -y
+            apt-get install moreutils less -y
   setup_new_task_def:
     steps:
       - run:
@@ -155,7 +155,7 @@ jobs:
     working_directory: *work_dir
     steps:
       # - aws-cli/setup
-      - install_sponge
+      - install_deps
       - pull_task_template
       - setup_new_task_def
       - register
