@@ -74,7 +74,7 @@ commands:
       - run:
           command: |
             cat new_task_definition.json
-  register:
+  register_with_ecs:
     steps:
       - run:
           command: |
@@ -161,7 +161,28 @@ jobs:
       - install_deps
       - pull_task_template
       - setup_new_task_def
-      - register
+      - register_with_ecs
+      - persist_to_workspace:
+          root: *work_dir
+          paths: 
+            - ./new_task_definition.json
+  update_service:
+    resource_class: small
+    <<: *aws_img
+    steps:
+      - install_deps
+      - attach_workspace:
+          at: *work_dir
+      - aws-ecs/update-service:
+          cluster-name: dev-${CIRCLE_PROJECT_REPONAME}-cluster
+          family: dev-${CIRCLE_PROJECT_REPONAME}-task
+          service-name: dev-${CIRCLE_PROJECT_REPONAME}-service
+          skip-task-definition-registration: true
+          verify-revision-is-deployed: true
+          force-new-deployment: true
+
+      
+    
 
 
 
@@ -189,6 +210,9 @@ workflows:
             #   root: *work_dir
             #   paths: 
             #     - ./task_template.json
+      - update_service:
+          <<: *test_only
+          context: catalog_api_dev
           
 
 
