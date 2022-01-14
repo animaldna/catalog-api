@@ -24,6 +24,7 @@ test_only: &test_only
   filters:
     branches:
       only: ecs-orb-test
+
 ## COMMANDS ##
 commands:
   chown_cache_dirs:
@@ -57,9 +58,10 @@ commands:
 
   setup_new_task_def:
     steps:
+      - run: export NEW_IMAGE=666431669894.dkr.ecr.us-east-2.amazonaws.com/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1-test
       - run:
           command: |
-            jq --arg REPO_NAME "dev-${CIRCLE_PROJECT_REPONAME}-task" --arg IMAGE "animaldna/sleep:latest" \
+            jq --arg REPO_NAME "dev-${CIRCLE_PROJECT_REPONAME}-task" --arg IMAGE "${NEW_IMAGE}" \
             '.taskDefinition.containerDefinitions[0].image |= $IMAGE
             | .taskDefinition.family |= $REPO_NAME
             | { "containerDefinitions": [.taskDefinition.containerDefinitions[0]],
@@ -82,7 +84,7 @@ commands:
             aws ecs register-task-definition --cli-input-json file://new_task_definition.json
 
 jobs:
-  unit_tests:
+  run_unit_tests:
     resource_class: small
     parameters:
       unit_test_img:
@@ -181,10 +183,6 @@ jobs:
           verify-revision-is-deployed: true
           force-new-deployment: true
 
-      
-    
-
-
 
 workflows:
   default:
@@ -195,31 +193,23 @@ workflows:
       # - build_and_push:
       #     parameters:
       #       build_img: animaldna/cimg-py-aws:latest
-      #       target_repo: 666431669894.dkr.ecr.us-east-2.amazonaws.com/cbergs-discogs
-      # - aws-ecr/build-and-push-image:
-      #     executor: aws-cli/default
-      #     <<: *test_only
-      #     context: catalog_api_dev 
-      #     setup-remote-docker: true
-      #     remote-docker-layer-caching: true
-      #     repo: catalog-api
-      #     tag: $CIRCLE_SHA1-test
+      #       target_repo: 666431669894.dkr.ecr.us-east-2.amazonaws.com/${CIRCLE_PROJECT_REPONAME}
+      - aws-ecr/build-and-push-image:
+          executor: aws-cli/default
+          <<: *test_only
+          context: catalog_api_dev 
+          setup-remote-docker: true
+          remote-docker-layer-caching: true
+          repo: $CIRCLE_PROJECT_REPONAME
+          tag: $CIRCLE_SHA1-test
       - register_new_task:
           <<: *test_only
           context: catalog_api_dev
-            #   root: *work_dir
-            #   paths: 
-            #     - ./task_template.json
+          requires:
+            - aws-ecr/build-and-push-image
       - update_service:
           <<: *test_only
           context: catalog_api_dev
-          
-
-
-
-      # CCI_ORB_AWS_ECS_REGISTERED_TASK_DFN
-      # - aws-ecs/verify-revision-is-deployed:
-      #     cluster-name:
-      #     family:
-      #     task-definition
-      
+          requires: 
+            - register_new_task
+        
