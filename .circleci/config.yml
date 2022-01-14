@@ -191,6 +191,7 @@ jobs:
           root: *work_dir
           paths: 
             - ./new_task_definition.json
+            - ./target_env.txt
   update_service:
     resource_class: small
     <<: *aws_img
