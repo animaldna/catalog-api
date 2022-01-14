@@ -30,13 +30,15 @@ commands:
   chown_cache_dirs:
     steps:
       - run:
+          name: chown cache directories
           command: |
             sudo chown -R circleci:circleci /usr/local/bin
             sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
             sudo chown -R circleci:circleci /home/circleci/.local/share/
-  run_unit_tests:
+  run_tests:
     steps:
       - run:
+          name: Run pytest
           command: |
             mkdir test-results
             pipenv run pytest -v --junitxml=test-results/junit.xml
@@ -47,20 +49,15 @@ commands:
           command: |
             set -x
             aws ecs describe-task-definition \
-            --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
+            --task-definition=${TARGET_ENV}-${CIRCLE_PROJECT_REPONAME}-task-template \
             >> task_template.json
             cat task_template.json
-  install_deps:
-    steps:
-      - run:
-          command: |
-            apt-get install moreutils less -y
-
   setup_new_task_def:
     steps:
       - run:
+          name: Generate new task definition file from template
           command: |
-            export NEW_IMAGE=666431669894.dkr.ecr.us-east-2.amazonaws.com/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1-test
+            export NEW_IMAGE=666431669894.dkr.ecr.us-east-2.amazonaws.com/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1-$TARGET_ENV
             jq --arg REPO_NAME "dev-${CIRCLE_PROJECT_REPONAME}-task" --arg IMAGE "${NEW_IMAGE}" \
             '.taskDefinition.containerDefinitions[0].image |= $IMAGE
             | .taskDefinition.family |= $REPO_NAME
@@ -79,6 +76,7 @@ commands:
   register_with_ecs:
     steps:
       - run:
+          name: Register new task definition with ECS
           command: |
             set -x
             aws ecs register-task-definition --cli-input-json file://new_task_definition.json
@@ -87,13 +85,13 @@ jobs:
   run_unit_tests:
     resource_class: small
     parameters:
-      unit_test_img:
+      job_image:
         description: Docker image for running unit tests
         type: string
         default: cimg/python:3.9
     working_directory: ~/app
     docker:
-      - image: << parameters.unit_test_img >>
+      - image: << parameters.job_image >>
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
@@ -117,26 +115,40 @@ jobs:
             - "/usr/local/bin"
             - "/home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages"
             - "/home/circleci/.local/share/virtualenvs/"
-      # - run_unit_tests
-      # - store_test_results:
-      #     path: test-results
+      - run_tests
+      - store_test_results:
+          path: test-results          
   build_and_push:
     resource_class: small
     parameters:
-      build_img:
+      job_image:
         description: Docker image for building + pushing to ECR
         type: string
-        default: animaldna/cimg-py-aws:latest
+        default: animaldna/aws-jq-py:latest
       target_repo:
         description: The repo to push the new image to.
         type: string
     working_directory: ~/app
     docker:
-      - image: << parameters.build_img >>
+      - image: << parameters.job_image >>
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
     steps:
+      - when:
+          condition:
+            equal: [master, << pipeline.git.branch >>]
+          steps:
+            - run: echo "TARGET_ENV=prod" >> $BASH_ENV
+      - when:
+          condition:
+            not:
+              equal: [master, << pipeline.git.branch >>]
+          steps:
+            - run: echo "TARGET_ENV=<< pipeline.git.branch>>" >> $BASH_ENV
+      - run:
+          command: |
+            cat $TARGET_ENV > target_env.txt
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
@@ -145,13 +157,12 @@ jobs:
           command: aws ecr get-login-password | docker login -u ${AWS_ACCESS_KEY} AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - run:
           command: |
-            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-stable .
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-stable 
-      #  - run:
-      #     command: |
-      #       docker build -t << parameters.target_repo >>:${CIRCLE_SHA1} .
-      #       docker tag << parameters.target_repo >>:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}
-      #       docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1} 
+            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV} .
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV}
+      - persist_to_workspace:
+          root: ~/app
+          paths: 
+            - current_env.txt
   register_new_task:
     resource_class: small
     <<: *aws_img
@@ -159,8 +170,10 @@ jobs:
     environment:
       AWS_PAGER: ""
     steps:
-      # - aws-cli/setup
-      - install_deps
+      - attach_workspace:
+          at: *work_dir
+      - run:
+          command: echo 'export TARGET_ENV=$( cat target_env.txt )' >> $BASH_ENV
       - pull_task_template
       - setup_new_task_def
       - register_with_ecs
@@ -172,13 +185,15 @@ jobs:
     resource_class: small
     <<: *aws_img
     steps:
-      - install_deps
+      # - install_deps
       - attach_workspace:
           at: *work_dir
+      - run:
+          command: echo 'export TARGET_ENV=$( cat target_env.txt )' >> $BASH_ENV
       - aws-ecs/update-service:
-          cluster-name: dev-${CIRCLE_PROJECT_REPONAME}-cluster
-          family: dev-${CIRCLE_PROJECT_REPONAME}-task
-          service-name: dev-${CIRCLE_PROJECT_REPONAME}-service
+          cluster-name: ${TARGET_ENV}-${CIRCLE_PROJECT_REPONAME}-cluster
+          family: ${TARGET_ENV}-${CIRCLE_PROJECT_REPONAME}-task
+          service-name: ${TARGET_ENV}-${CIRCLE_PROJECT_REPONAME}-service
           skip-task-definition-registration: true
           verify-revision-is-deployed: true
           force-new-deployment: true
@@ -187,13 +202,11 @@ jobs:
 workflows:
   default:
     jobs:
-      # - run_unit_tests:
-      #     parameters:
-      #       unit_test_img: cimg/python:3.9
-      # - build_and_push:
-      #     parameters:
-      #       build_img: animaldna/cimg-py-aws:latest
-      #       target_repo: 666431669894.dkr.ecr.us-east-2.amazonaws.com/${CIRCLE_PROJECT_REPONAME}
+      - run_unit_tests:
+          job_image: cimg/python:3.9
+      - build_and_push:
+          job_image: animaldna/cimg-py-aws:latest
+          target_repo: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${CIRCLE_PROJECT_REPONAME}
       - aws-ecr/build-and-push-image:
           executor: aws-cli/default
           <<: *test_only
