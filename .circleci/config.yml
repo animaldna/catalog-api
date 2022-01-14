@@ -63,7 +63,7 @@ commands:
             requiresCompatibilities: .taskDefinition.requiresCompatibilities, \
             "cpu": .taskDefinition.cpu,\
             "memory": .taskDefinition.memory }' task_template.json \
-            >> new_task_definition.json
+            > new_task_definition.json
       - run:
           command: |
             cat new_task_definition.json
@@ -141,7 +141,7 @@ jobs:
     <<: *aws_img
     working_directory: *work_dir
     steps:
-      - aws-cli/setup
+      # - aws-cli/setup
       - pull_task_template
       - setup_new_task_def
       # - register_new_task_def
