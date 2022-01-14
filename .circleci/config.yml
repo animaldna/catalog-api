@@ -53,7 +53,7 @@ commands:
     steps:
       - run:
           command: |
-            jq '.taskDefinition.containerDefinitions[0].image |= "animaldna/sleep:latest" \
+            jq '.taskDefinition.containerDefinitions[0].image |= WHATEVERTEST \
             | .taskDefinition.family |= "dev-${CIRCLE_PROJECT_REPO_NAME}-task" \
             | { "containerDefinitions": [.taskDefinition.containerDefinitions[0]], \
             "family": .taskDefinition.family, \
