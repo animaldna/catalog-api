@@ -53,8 +53,8 @@ commands:
     steps:
       - run:
           command: |
-            jq '.taskDefinition.containerDefinitions[0].image |= "WHATEVERTEST"
-            | .taskDefinition.family |= "dev-${CIRCLE_PROJECT_REPO_NAME}-task"
+            jq --arg REPO_NAME ${CIRCLE_PROJECT_REPONAME} '.taskDefinition.containerDefinitions[0].image |= "WHATEVERTEST"
+            | .taskDefinition.family |= "dev-$REPO_NAME-task"
             | { "containerDefinitions": [.taskDefinition.containerDefinitions[0]],
             "family": .taskDefinition.family,
             "taskRoleArn": .taskDefinition.taskRoleArn,
