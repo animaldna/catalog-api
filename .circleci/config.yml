@@ -58,9 +58,9 @@ commands:
 
   setup_new_task_def:
     steps:
-      - run: export NEW_IMAGE=666431669894.dkr.ecr.us-east-2.amazonaws.com/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1-test
       - run:
           command: |
+            export NEW_IMAGE=666431669894.dkr.ecr.us-east-2.amazonaws.com/$CIRCLE_PROJECT_REPONAME:$CIRCLE_SHA1-test
             jq --arg REPO_NAME "dev-${CIRCLE_PROJECT_REPONAME}-task" --arg IMAGE "${NEW_IMAGE}" \
             '.taskDefinition.containerDefinitions[0].image |= $IMAGE
             | .taskDefinition.family |= $REPO_NAME
