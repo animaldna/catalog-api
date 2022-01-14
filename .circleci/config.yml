@@ -196,7 +196,6 @@ jobs:
     resource_class: small
     <<: *aws_img
     steps:
-      # - install_deps
       - attach_workspace:
           at: *work_dir
       - run:
@@ -209,7 +208,6 @@ jobs:
           verify-revision-is-deployed: true
           force-new-deployment: true
 
-
 workflows:
   default:
     jobs:
@@ -220,14 +218,6 @@ workflows:
           context: catalog_api_dev
           job_image: animaldna/cimg-py-aws:latest
           target_repo: ${CIRCLE_PROJECT_REPONAME}
-      # - aws-ecr/build-and-push-image:
-      #     executor: aws-cli/default
-      #     <<: *test_only
-      #     context: catalog_api_dev 
-      #     setup-remote-docker: true
-      #     remote-docker-layer-caching: true
-      #     repo: $CIRCLE_PROJECT_REPONAME
-      #     tag: $CIRCLE_SHA1-test
       - register_new_task:
           <<: *test_only
           context: catalog_api_dev
