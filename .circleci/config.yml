@@ -157,7 +157,7 @@ jobs:
                   - run: echo "TARGET_ENV=dev" >> $BASH_ENV
       - run:
           command: |
-            echo $TARGET_ENV > ~/tmp/target_env.txt
+            echo $TARGET_ENV > /tmp/target_env.txt
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
@@ -169,9 +169,9 @@ jobs:
             docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV} .
             docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV}
       - persist_to_workspace:
-          root: .
+          root: /tmp
           paths: 
-            - ~/tmp/current_env.txt
+            - current_env.txt
   register_new_task:
     resource_class: small
     <<: *aws_img
