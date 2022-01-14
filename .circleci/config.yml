@@ -124,7 +124,7 @@ jobs:
       job_image:
         description: Docker image for building + pushing to ECR
         type: string
-        default: animaldna/aws-jq-py:latest
+        default: cimg/python:3.9
       target_repo:
         description: The repo to push the new image to.
         type: string
@@ -207,14 +207,14 @@ workflows:
       - build_and_push:
           job_image: animaldna/cimg-py-aws:latest
           target_repo: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${CIRCLE_PROJECT_REPONAME}
-      - aws-ecr/build-and-push-image:
-          executor: aws-cli/default
-          <<: *test_only
-          context: catalog_api_dev 
-          setup-remote-docker: true
-          remote-docker-layer-caching: true
-          repo: $CIRCLE_PROJECT_REPONAME
-          tag: $CIRCLE_SHA1-test
+      # - aws-ecr/build-and-push-image:
+      #     executor: aws-cli/default
+      #     <<: *test_only
+      #     context: catalog_api_dev 
+      #     setup-remote-docker: true
+      #     remote-docker-layer-caching: true
+      #     repo: $CIRCLE_PROJECT_REPONAME
+      #     tag: $CIRCLE_SHA1-test
       - register_new_task:
           <<: *test_only
           context: catalog_api_dev
