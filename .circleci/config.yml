@@ -53,16 +53,16 @@ commands:
     steps:
       - run:
           command: |
-            jq '.taskDefinition.containerDefinitions[0].image |= WHATEVERTEST \
-            | .taskDefinition.family |= "dev-${CIRCLE_PROJECT_REPO_NAME}-task" \
-            | { "containerDefinitions": [.taskDefinition.containerDefinitions[0]], \
-            "family": .taskDefinition.family, \
-            "taskRoleArn": .taskDefinition.taskRoleArn, \
-            "executionRoleArn": .taskDefinition.executionRoleArn, \
-            "networkMode": .taskDefinition.networkMode, \
-            requiresCompatibilities: .taskDefinition.requiresCompatibilities, \
-            "cpu": .taskDefinition.cpu,\
-            "memory": .taskDefinition.memory }' task_template.json \
+            jq '.taskDefinition.containerDefinitions[0].image |= WHATEVERTEST
+            | .taskDefinition.family |= "dev-${CIRCLE_PROJECT_REPO_NAME}-task"
+            | { "containerDefinitions": [.taskDefinition.containerDefinitions[0]],
+            "family": .taskDefinition.family,
+            "taskRoleArn": .taskDefinition.taskRoleArn,
+            "executionRoleArn": .taskDefinition.executionRoleArn,
+            "networkMode": .taskDefinition.networkMode,
+            requiresCompatibilities: .taskDefinition.requiresCompatibilities,
+            "cpu": .taskDefinition.cpu,
+            "memory": .taskDefinition.memory }' task_template.json
             > new_task_definition.json
       - run:
           command: |
