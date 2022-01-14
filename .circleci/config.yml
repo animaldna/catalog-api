@@ -78,7 +78,7 @@ commands:
       - run:
           command: |
             set -x
-            aws ecs register-task-definition --cli-input-json new_task_definition.json
+            aws ecs register-task-definition --cli-input-json file://new_task_definition.json
 
 jobs:
   unit_tests:
