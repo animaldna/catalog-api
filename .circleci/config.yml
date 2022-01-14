@@ -49,6 +49,11 @@ commands:
             --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
             >> task_template.json
             cat task_template.json
+  install_sponge:
+    steps:
+      - run:
+          command: |
+            apt-get install sponge -y
   setup_new_task_def:
     steps:
       - run:
@@ -63,8 +68,8 @@ commands:
             "networkMode": .taskDefinition.networkMode,
             requiresCompatibilities: .taskDefinition.requiresCompatibilities,
             "cpu": .taskDefinition.cpu,
-            "memory": .taskDefinition.memory }' task_template.json
-            > new_task_definition.json
+            "memory": .taskDefinition.memory }' task_template.json)
+            | sponge new_task_definition.json
       - run:
           command: |
             cat new_task_definition.json
@@ -149,6 +154,7 @@ jobs:
     working_directory: *work_dir
     steps:
       # - aws-cli/setup
+      - install_sponge
       - pull_task_template
       - setup_new_task_def
       - register
