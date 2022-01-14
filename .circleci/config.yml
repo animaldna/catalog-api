@@ -8,7 +8,6 @@ orbs:
 global_work_dir: &work_dir "/tmp/cci-work-dir"
 aws_img: &aws_img
   docker:
-    - resource_class: small
     - image: animaldna/aws-jq-py:latest
       auth:
         username: $DOCKERHUB_USER
@@ -83,6 +82,7 @@ commands:
 
 jobs:
   unit_tests:
+    resource_class: small
     parameters:
       unit_test_img:
         description: Docker image for running unit tests
@@ -98,7 +98,6 @@ jobs:
           AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
           AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
           AWS_DEFAULT_REGION: $AWS_REGION
-    resource_class: small
     steps:
       - checkout
       - setup_remote_docker:
@@ -119,6 +118,7 @@ jobs:
       # - store_test_results:
       #     path: test-results
   build_and_push:
+    resource_class: small
     parameters:
       build_img:
         description: Docker image for building + pushing to ECR
@@ -133,7 +133,6 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-    resource_class: small
     steps:
       - checkout
       - setup_remote_docker:
@@ -151,6 +150,7 @@ jobs:
       #       docker tag << parameters.target_repo >>:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}
       #       docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1} 
   register_new_task:
+    resource_class: small
     <<: *aws_img
     working_directory: *work_dir
     steps:
