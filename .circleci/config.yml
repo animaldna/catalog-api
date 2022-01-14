@@ -169,7 +169,7 @@ jobs:
             docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV} .
             docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV}
       - persist_to_workspace:
-          root: ~/app
+          root: .
           paths: 
             - ~/tmp/current_env.txt
   register_new_task:
