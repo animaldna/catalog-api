@@ -212,6 +212,7 @@ workflows:
   default:
     jobs:
       - run_unit_tests:
+          context: catalog_api_dev
           job_image: cimg/python:3.9
       - build_and_push:
           context: catalog_api_dev
