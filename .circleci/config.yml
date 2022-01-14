@@ -200,7 +200,7 @@ jobs:
       - attach_workspace:
           at: *work_dir
       - run:
-          command: echo 'export TARGET_ENV=$( cat target_env.txt )' >> $BASH_ENV
+          command: echo 'export TARGET_ENV=$( cat /tmp/cci-work-dir/target_env.txt )' >> $BASH_ENV
       - aws-ecs/update-service:
           cluster-name: $TARGET_ENV-${CIRCLE_PROJECT_REPONAME}-cluster
           family: $TARGET_ENV-${CIRCLE_PROJECT_REPONAME}-task
