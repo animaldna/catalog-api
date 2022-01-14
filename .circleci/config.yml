@@ -68,7 +68,7 @@ commands:
             "networkMode": .taskDefinition.networkMode,
             requiresCompatibilities: .taskDefinition.requiresCompatibilities,
             "cpu": .taskDefinition.cpu,
-            "memory": .taskDefinition.memory }' task_template.json
+            "memory": .taskDefinition.memory }' task_template.json \
             | sponge new_task_definition.json
       - run:
           command: |
