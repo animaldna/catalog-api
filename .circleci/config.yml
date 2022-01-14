@@ -167,8 +167,8 @@ jobs:
       - run:
           command: |
             aws ecr get-login-password | docker login -u ${AWS_ACCESS_KEY} AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV} .
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-${CURRENT_ENV}
+            docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-$TARGET_ENV .
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}-$TARGET_ENV
       - persist_to_workspace:
           root: /tmp
           paths: 
@@ -202,9 +202,9 @@ jobs:
       - run:
           command: echo 'export TARGET_ENV=$( cat target_env.txt )' >> $BASH_ENV
       - aws-ecs/update-service:
-          cluster-name: ${TARGET_ENV}-${CIRCLE_PROJECT_REPONAME}-cluster
-          family: ${TARGET_ENV}-${CIRCLE_PROJECT_REPONAME}-task
-          service-name: ${TARGET_ENV}-${CIRCLE_PROJECT_REPONAME}-service
+          cluster-name: $TARGET_ENV-${CIRCLE_PROJECT_REPONAME}-cluster
+          family: $TARGET_ENV-${CIRCLE_PROJECT_REPONAME}-task
+          service-name: $TARGET_ENV-${CIRCLE_PROJECT_REPONAME}-service
           skip-task-definition-registration: true
           verify-revision-is-deployed: true
           force-new-deployment: true
