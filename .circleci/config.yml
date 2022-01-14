@@ -155,11 +155,9 @@ jobs:
                   equal: [stage, << pipeline.git.branch >>]
                 steps:
                   - run: echo "TARGET_ENV=dev" >> $BASH_ENV
-            
-
       - run:
           command: |
-            echo $TARGET_ENV > target_env.txt
+            echo $TARGET_ENV > /tmp/target_env.txt
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
@@ -173,7 +171,7 @@ jobs:
       - persist_to_workspace:
           root: ~/app
           paths: 
-            - current_env.txt
+            - /tmp/current_env.txt
   register_new_task:
     resource_class: small
     <<: *aws_img
