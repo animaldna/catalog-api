@@ -95,10 +95,10 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-        # environment:
-        #   AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-        #   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-        #   AWS_DEFAULT_REGION: $AWS_REGION
+        environment:
+          AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+          AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+          AWS_REGION: $AWS_REGION
     steps:
       - checkout
       - setup_remote_docker:
