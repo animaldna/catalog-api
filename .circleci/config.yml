@@ -6,6 +6,12 @@ orbs:
 
 ## ALIASES ##
 global_work_dir: &work_dir "/tmp/cci-work-dir"
+aws_img: &aws_img
+  docker:
+    - image: animaldna/aws-jq-py:latest
+      auth:
+        username: $DOCKERHUB_USER
+        password: $DOCKERHUB_PASSWORD
 production_only: &prod_only
   filters:
     branches:
@@ -28,11 +34,39 @@ commands:
             sudo chown -R circleci:circleci /home/circleci/.pyenv/versions/3.9.9/lib/python3.9/site-packages
             sudo chown -R circleci:circleci /home/circleci/.local/share/
   run_unit_tests:
-      steps:
-        - run:
-            command: |
-              mkdir test-results
-              pipenv run pytest -v --junitxml=test-results/junit.xml
+    steps:
+      - run:
+          command: |
+            mkdir test-results
+            pipenv run pytest -v --junitxml=test-results/junit.xml
+  pull_task_template:
+    steps:
+      - run:
+          name: Pull latest task definition template
+          command: |
+            set -x
+            aws ecs describe-task-definition \
+            --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
+            >> task_template.json
+            cat task_template.json
+  setup_new_task_def:
+    steps:
+      - run:
+          command: |
+            jq '.taskDefinition.containerDefinitions[0].image |= ${NEW_IMAGE} \
+            | .taskDefinition.family |= "dev-${CIRCLE_PROJECT_REPO_NAME}-task" \
+            | { "containerDefinitions": [.taskDefinition.containerDefinitions[0]], \
+            "family": .taskDefinition.family, \
+            "taskRoleArn": .taskDefinition.taskRoleArn, \
+            "executionRoleArn": .taskDefinition.executionRoleArn, \
+            "networkMode": .taskDefinition.networkMode, \
+            requiresCompatibilities: .taskDefinition.requiresCompatibilities, \
+            "cpu": .taskDefinition.cpu,\
+            "memory": .taskDefinition.memory }' task_template.json \
+            >> new_task_definition.json
+      - run:
+          command: |
+            cat new_task_definition.json
 
 jobs:
   unit_tests:
@@ -103,19 +137,15 @@ jobs:
       #       docker build -t << parameters.target_repo >>:${CIRCLE_SHA1} .
       #       docker tag << parameters.target_repo >>:${CIRCLE_SHA1} ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1}
       #       docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/<< parameters.target_repo >>:${CIRCLE_SHA1} 
-  get_task_def_template:
-    executor: aws-cli/default
+  register_new_task:
+    <<: *aws_img
     working_directory: *work_dir
     steps:
       - aws-cli/setup
-      - run:
-          name: Pull latest task definition template
-          command: |
-            set -x
-            aws ecs describe-task-definition \
-            --task-definition=dev-${CIRCLE_PROJECT_REPONAME}-task-template \
-            >> task_template.json
-            cat task_template.json
+      - pull_task_template
+      - setup_new_task_def
+      # - register_new_task_def
+
 
 
 workflows:
@@ -136,9 +166,12 @@ workflows:
       #     remote-docker-layer-caching: true
       #     repo: catalog-api
       #     tag: $CIRCLE_SHA1-test
-      - get_task_def_template:
+      - register_new_task:
           <<: *test_only
           context: catalog_api_dev
+            #   root: *work_dir
+            #   paths: 
+            #     - ./task_template.json
           
 
 
