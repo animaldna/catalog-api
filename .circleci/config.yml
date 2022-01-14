@@ -54,6 +54,7 @@ commands:
       - run:
           command: |
             apt-get install moreutils less -y
+
   setup_new_task_def:
     steps:
       - run:
@@ -153,6 +154,8 @@ jobs:
     resource_class: small
     <<: *aws_img
     working_directory: *work_dir
+    environment:
+      AWS_PAGER: ""
     steps:
       # - aws-cli/setup
       - install_deps
