@@ -218,7 +218,7 @@ workflows:
       - build_and_push:
           context: catalog_api_dev
           job_image: animaldna/cimg-py-aws:latest
-          target_repo: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${CIRCLE_PROJECT_REPONAME}
+          target_repo: ${CIRCLE_PROJECT_REPONAME}
       # - aws-ecr/build-and-push-image:
       #     executor: aws-cli/default
       #     <<: *test_only
