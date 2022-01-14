@@ -12,18 +12,7 @@ aws_img: &aws_img
       auth:
         username: $DOCKERHUB_USER
         password: $DOCKERHUB_PASSWORD
-production_only: &prod_only
-  filters:
-    branches:
-      only: master
-dev_only: &dev_only
-  filters:
-    branches:
-      only: dev
-test_only: &test_only
-  filters:
-    branches:
-      only: ecs-orb-test
+
 
 ## COMMANDS ##
 commands:
@@ -219,12 +208,10 @@ workflows:
           job_image: animaldna/cimg-py-aws:latest
           target_repo: ${CIRCLE_PROJECT_REPONAME}
       - register_new_task:
-          <<: *test_only
           context: catalog_api_dev
           requires:
             - build_and_push
       - update_service:
-          <<: *test_only
           context: catalog_api_dev
           requires: 
             - register_new_task

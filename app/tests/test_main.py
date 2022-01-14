@@ -8,7 +8,7 @@ def test_root_route():
     assert response.status_code == 200
     assert response.json() == {
         "hello": "Welcome to the Conehead Records API",
-        "api_version": "lol not sure",
+        "api_version": "v1.1",
         "documentation_url": "https://catalog-api.chloeboylan.work/redoc"
     }
 
