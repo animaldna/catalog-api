@@ -53,7 +53,7 @@ commands:
     steps:
       - run:
           command: |
-            apt-get install sponge -y
+            apt-get install moreutils -y
   setup_new_task_def:
     steps:
       - run:
