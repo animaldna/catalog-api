@@ -172,7 +172,7 @@ jobs:
       - persist_to_workspace:
           root: /tmp
           paths: 
-            - current_env.txt
+            - target_env.txt
   register_new_task:
     resource_class: small
     <<: *aws_img
