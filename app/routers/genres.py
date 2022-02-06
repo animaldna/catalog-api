@@ -1,5 +1,6 @@
-from typing import List
+import asyncio
 
+from typing import List
 from fastapi import APIRouter, HTTPException
 from app.db import genre_crud as db
 from app.db import models
@@ -9,8 +10,9 @@ LOG = logger(__name__)
 router = APIRouter()
 
 @router.get("/genres/")
-def get_genres():
-    result = {"genres": db.get_all_genres()}
+async def get_genres():
+    r = await db.get_all_genres()
+    result = {"genres": r}
     if result is None:
         raise HTTPException(
             status_code=500, detail="Something went wrong." " Please try again later."

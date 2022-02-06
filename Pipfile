@@ -8,10 +8,10 @@ fastapi = "*"
 python-dotenv = "*"
 pytest = "*"
 uvicorn = {extras = ["standard"], version = "*"}
-boto3 = "*"
 requests = "*"
 halo = "*"
 slowapi = "*"
+aioboto3 = "*"
 
 [dev-packages]
 
