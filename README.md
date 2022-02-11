@@ -16,8 +16,8 @@ The API itself was actually a secondary focus; my main goals were to:
 - DynamoDB
 - CircleCI
 
-## Usage
-A working version is hosted at [https://catalog-api.chloeboylan.work](https://catalog-api.chloeboylan.work). There are two sets of docs available at [/docs](https://catalog-api.chloeboylan.work/docs) and [/redoc.](https://catalog-api.chloeboylan.work/redoc) I don't want to wake up to an absurd AWS bill, so it's rate-limited to 5 requests/minute in case someone tries to blast it for whatever reason. :)
+<!-- ## Usage
+A working version is hosted at [https://catalog-api.chloeboylan.work](https://catalog-api.chloeboylan.work). There are two sets of docs available at [/docs](https://catalog-api.chloeboylan.work/docs) and [/redoc.](https://catalog-api.chloeboylan.work/redoc) I don't want to wake up to an absurd AWS bill, so it's rate-limited to 5 requests/minute in case someone tries to blast it for whatever reason. :) -->
 
 ## CI/CD Pipeline
 The default pipeline pulls the task template from ECS, updates it with jq, registers the new task definition, and updates the service. Everything but the build step runs on a custom image based on python:3.9-buster-slim. 
@@ -41,7 +41,8 @@ Right now I'm focused on the CI/CD pipeline and project infrastructure, so the A
 - [ ] /albums
 - [ ] /artists
 #### Misc.
-- [ ] Logging
+- [ ] Logging to file
+- [ ] Exception for ConnectionErrors
 - [ ] Sorting
 - [ ] Pagination
 
@@ -52,5 +53,5 @@ This is a personal project and a work in progress, but I'm always open to receiv
 Chloe Boylan
 
 ## License
-Copyright © 2021 Chloe Boylan.
+Copyright © 2022 Chloe Boylan.
 This project is MIT licensed.
