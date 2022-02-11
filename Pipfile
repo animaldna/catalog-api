@@ -12,6 +12,7 @@ boto3 = "*"
 requests = "*"
 halo = "*"
 slowapi = "*"
+botocore = "*"
 
 [dev-packages]
 

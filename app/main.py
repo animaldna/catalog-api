@@ -1,6 +1,5 @@
 from fastapi import FastAPI
-from app.routers import albums, artists, genres
-
+from .routers import albums, artists, genres
 from starlette.applications import Starlette
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address

@@ -1,9 +1,8 @@
+import urllib.parse
+from ..internal.logger import logger
+from ..db import models,artist_crud as db
 from fastapi import APIRouter, HTTPException, Path, Query
 from typing import List, Optional
-from app.internal.logger import logger
-from app.db import models,artist_crud as db
-import urllib.parse
-
 
 LOG = logger(__name__)
 router = APIRouter()
